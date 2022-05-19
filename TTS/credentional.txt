@@ -1,5 +1,0 @@
-Access key ID : AKIATTX7A56JPGD4W34K
-Secret access key : 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
-link :  https://248569196434.signin.aws.amazon.com/console
-video link : https://www.youtube.com/watch?v=qJZeW1ZpXaM&ab_channel=SpecialAgentSqueaky%27sMiscellenousstuff
-blog link : https://www.specialagentsqueaky.com/blog-post/mjsm6q9d/2020-11-26-how-to-create-your-own-text-to-speech-using-amazon-polly/?utm_source=youtube&utm_medium=description
