@@ -1,9 +1,3 @@
-from crypt import methods
-from distutils.log import debug
-from importlib.resources import path
-from urllib import request
-from flask import Flask, render_template,request
-
 import re
 #nltk.download('punkt')
 from nltk.tokenize import word_tokenize
@@ -28,6 +22,12 @@ import base64
 import boto3
 import os
 from contextlib import closing
+
+from flask import Flask
+from flask import request
+from flask import render_template
+
+
 
 class linguistic:
     def __init__(self,filePath):
@@ -211,12 +211,12 @@ class TextPreProcessing:
         # print("Final Text : ",TokenizedText)
         
         self.IPA(TokenizedText)
-
+        
 
 class TTS(TextPreProcessing ,linguistic):
     def __init__(self,text,NaiveBaseDF):
         TextPreProcessing.__init__(self,text)
-        self.vowels = ['ɑ' ,'ā','ə','i','e','ai','əi']
+        self.vowels = ['a','ɑ' ,'ā','ə','i','e','ai','əi']
         
         self.consonant = ['b','p' ,'t̪','ʈ','s','d͡ʒ','t͡ʃ','h', 
                           'd','x','t͡s','d͡z' ,'d̪' ,'ɖ','z','r',
@@ -303,11 +303,13 @@ class TTS(TextPreProcessing ,linguistic):
         # print("Final Text : ",TokenizedText)
         
         # print(self.IPA(TokenizedText))
+        Tokens_of_IPA = self.IPA(TokenizedText)
         
-        syllbleForm ,list_of_IPA =  self.Make_Syllables(self.IPA(TokenizedText))
+        syllbleForm ,list_of_IPA =  self.Make_Syllables(Tokens_of_IPA)
         
         self.turn_into_speech( syllbleForm ,list_of_IPA )
         
+       
         # self.single_form.to_csv('NaiveBase_single_form.csv')
                 
         
@@ -316,43 +318,119 @@ class TTS(TextPreProcessing ,linguistic):
         print("list_of_IPA : ",list_of_IPA)
         
         #check the list of syllables and list of IPA is equal
-        sending_IPA_to_server = ''
+        final_ipa_list_to_Send_API = []
         if len(syllbleForm) == len(list_of_IPA):
             
             for index in range(0,len(syllbleForm)):
                 
-
-                print(list_of_IPA[index])
-                # sending_IPA_to_server = sending_IPA_to_server + str(list_of_IPA[index]) + ' '
-                # self.polly_handler(list_of_IPA[index])
-
-                # if given syllable form in validated syllables mean its correct syllables ,it can speack
-                # if syllbleForm[index] in self.validated_Syllble:
-                #     # print("validated syllables : ",list_of_IPA[index])
-                #     # print()
-                #     polly_handler(list_of_IPA[index])
-                # else:
-                #     print("Not validated syllables : ",list_of_IPA[index])
-            # print("sending string : ",sending_IPA_to_server)
+                # check given syllable is valid or not
+                # if its not valid call the syllableModification fun to make it correct
+                
+                if syllbleForm[index] in self.validated_Syllble:
+                    print("Valid syllable : ",syllbleForm[index] , list_of_IPA[index] )
+                    alread_valid_syllable = list_of_IPA[index]
+                    print('alread_valid_syllable : ',alread_valid_syllable)
+                    final_ipa_list_to_Send_API.append(alread_valid_syllable)
+                
+                else:
+                    
+                    print('calling for modification : ',list_of_IPA[index])
+                    modified_IPA = self.syllableModification(list_of_IPA[index])
+                    print('modified_IPA :',modified_IPA)
+                    final_ipa_list_to_Send_API.append(self.syllableModification(list_of_IPA[index]))
+                    
+                
+        print('final_ipa_list_to_Send_API : ',final_ipa_list_to_Send_API)
+        
+        # calling AMazong API
+        self.polly_handler(final_ipa_list_to_Send_API)
+        
+    def Turn_into_SyllbleForm(self,partial_ipa):
+        
+        syl_str = ''
+        for index,value in enumerate(range(0,len(partial_ipa))):
+            if partial_ipa[index] in self.vowels:
+                syl_str += 'V'
+            else:
+                syl_str += 'C'
             
-            # self.polly_handler(sending_IPA_to_server)
+        return syl_str
             
-            # print('completed.......')
-                    
-                    
-                    
+        
+    def max_Freq_vowels(self,consonant):
+        df =  pd.read_csv('NaiveBase_single_form.csv').set_index('consonant')
+        
+        vowels_Dictionary = {
+                0:'ɑ',
+                1:'ā',
+                2:'ə',
+                3:'i',
+                4:'e',
+                5:'ai',
+                6:'əi'
+        }
+        # print(df.loc[consonant])
+        l1_ = df.loc[consonant]
+        print(l1_)
+        max_freq = np.argmax(l1_)
+        
+        print('Return max freq : ',consonant , vowels_Dictionary[max_freq] , max_freq)
+        return vowels_Dictionary[max_freq]
+
+            
+            
+            
+            
     def syllableModification(self,WrongIPA):
-        pass
+        
+        
+        
+        ret_modified_IPA_list = []
+        
+        
+        # split the string into lenght of 2
+        ipa_text = WrongIPA
+        splitted_IPA = [ipa_text[i:i+2] for i in range(0, len(ipa_text), 2)]
+        
+        # checking 2 lenght of string is valid syllables
+        for partial_ipa in splitted_IPA:
+            
+            partial_ipa_syllable_form = self.Turn_into_SyllbleForm(partial_ipa)
+            # print('partial_ipa_syllable_form : ',partial_ipa_syllable_form , partial_ipa)
+            
+            if  partial_ipa_syllable_form in self.validated_Syllble:
+                ret_modified_IPA_list.append(partial_ipa) 
+            else:
+                try: 
+                    
+                    print('before modification : ',partial_ipa)
+                
+                    partial_ipa += self.max_Freq_vowels(partial_ipa[-1])
+                
+                    print("After modification : ",partial_ipa)
+                    ret_modified_IPA_list.append(partial_ipa)
+                except:
+                    ret_modified_IPA_list.append(partial_ipa)
+        return ' '.join(ret_modified_IPA_list)
+        
     
     
     def polly_handler(self,text,VoiceId='Salli'):
-        aws_access_key_id = 'AKIATTX7A56JM4EMUCVY' 
-        aws_secret_access_key = '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' 
+        aws_access_key_id = 'addsecretkeyhere'
+        aws
         region_name='us-west-2'
 
+        API_TEXT_String  = ''
+        for text_value in text:
+            print('text_value : ',text_value)
+            API_TEXT_String += text_value + " "
+        
+
+        print('API_TEXT_String : ',API_TEXT_String)
+        
         polly = boto3.client("polly",region_name=region_name, aws_access_key_id = aws_access_key_id, aws_secret_access_key = aws_secret_access_key)
 
-
+        text = API_TEXT_String
         # voice = event.get("voice", "Salli")
 
         # strip out slashes if submitted with text string
@@ -360,13 +438,13 @@ class TTS(TextPreProcessing ,linguistic):
             text = text.replace("/", "")
 
         # generate phoneme tag for polly to read
-        print("------>",text)   
         phoneme = f"<phoneme alphabet='ipa' ph='{text}'></phoneme>"
 
-        # send to polly, requesting mp3 back
-        #The valid values for mp3 and ogg_vorbis are "8000", "16000", "22050", and "24000". 
-        #The default value for standard voices is "22050". 
-        #The default value for neural voices is "24000".
+#         send to polly, requesting mp3 back
+#         The valid values for mp3 and ogg_vorbis are "8000", "16000", "22050", and "24000". 
+#         The default value for standard voices is "22050". 
+#         The default value for neural voices is "24000".
+
         response = polly.synthesize_speech(
             OutputFormat="mp3",
             TextType="ssml",
@@ -377,13 +455,10 @@ class TTS(TextPreProcessing ,linguistic):
 
         # encode polly's returned audio stream as base64 and return
         if "AudioStream" in response:
-    #         with closing(response["AudioStream"]) as stream:
-    #             audio = base64.encodebytes(stream.read())
+                with open('static/audio/play.mp3', 'wb') as f:
+                    f.write(response['AudioStream'].read())
 
-    #         return audio.decode("ascii")
-            with open('static/audio/pashto.mp3', 'wb') as f:
-                f.write(response['AudioStream'].read())
-                       
+                        
     def Stats(self,IPA):
         # print('integrated IPA : ',IPA)
         #check the df
@@ -393,7 +468,7 @@ class TTS(TextPreProcessing ,linguistic):
         
          # ['ɑ' ,'ā','ə','i','e','ai','əi']
         for count ,char_id in enumerate(range(0,len(IPA))):
-            # print('Count {} --> Char {} , IPA : {} IPA[-1] : {}'.format(count,IPA[char_id],IPA,IPA[-1]))
+            print('Count {} --> Char {} , IPA : {} , IPA[-1] : {}'.format(count,IPA[char_id],IPA,IPA[-1]))
 
             # check each if this then increament in df
             # print("--?" ,IPA[char_id: char_id+2])
@@ -521,27 +596,6 @@ class TTS(TextPreProcessing ,linguistic):
                  
 
 
-            # print(self.single_form)
-
-    
-    def request_to_read_IPA(self,ipa):
-
-
-        #  getting input tags
-        input_ipa = driver.find_element('id','ipa-text')
-        
-        input_ipa.clear()
-        # sennding IPA
-        input_ipa.send_keys(ipa)
-
-        # getting read button
-        read_button = driver.find_element('id','submit')
-        
-        read_button.click()
-        
-     
-        
-
 app = Flask(__name__)
 
 
@@ -554,15 +608,17 @@ def index():
     if request.method =='POST':
         if request.form['rebot-Voice'] == 'Generate Audio':
             RawInput = request.form['user_content']
-            print(RawInput)
+            
 
             Object =  TTS(RawInput , 'NaiveBase_single_form.csv')
             Object.Testing(RawInput)
+
+            print('ye ra hay' , RawInput)
             
-            path_ = 'static/audio/pashto.mp3'
+            path_ = './static/audio/play.mp3'
             return  render_template('index.html' , path=path_)
     else:
-        return render_template('index.html')
+        return render_template('index.html' , path= None)
 
 if __name__ == "__main__":
     app.run(debug=True)
