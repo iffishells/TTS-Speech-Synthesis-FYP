@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<title>Text to Speech Synthesis</title>
+		<link rel="stylesheet" href="first.css">
+
+	</head>
+
+	<body>
+        
+<!--		<img src="1.png" id="bg" alt="">  -->     
+<!--                HEADER---NAVIGATION BAR-->
+        <div class="topnav">
+          <a class="active" href="#SOURCE-CODE">SOURCE CODE</a>
+          <a href="#DOCUMENTATION">DOCUMENTATION</a>
+          <a href="#about">About</a>
+          <h2 class="Heading">Pashto Text to Speech</h2>
+        </div>
+        
+<!--                SEARCH BAR       -->
+        
+        <div class="col-md-7 col-sm-7 col-xs-7">
+			<div class="wrap">
+				<div class="search">
+				<input type="text" class="searchTerm"  name="user_content" id="user_content" placeholder="Enter Text" required/>
+				</div>
+			</div>
+		</div>
+
+<!--                 BUTTON           -->
+        
+        <div class="col-md-5 col-sm-5 col-xs-5">
+            <div class="button">
+                <input type="submit" name = 'rebot-Voice' value="Generate Audio" class="input-button">
+            </div>
+        </div>
+
+
+<!--        SOUND CONTROL             -->
+        <div class="sound-control">
+            <audio controls>
+                <source src={{  path  }} type="audio/mpeg">
+                Your browser does not support the audio tag.
+            </audio>
+        </div>	
+	</body>
+
+</html>

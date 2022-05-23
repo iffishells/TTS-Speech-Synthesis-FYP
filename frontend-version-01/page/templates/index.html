@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <title>Text to Speech Synthesis</title>
+	
+	</head>
+
+	<body>
+
+
+		<div class="container-fluid">
+			
+			<form action="/" method="POST">
+
+						<div class="col-md-7 col-sm-7 col-xs-7">
+							<input type="text"  name="user_content" id="user_content" placeholder="Enter Text" required/>
+
+						</div>
+						
+						<div class="col-md-5 col-sm-5 col-xs-5">
+							<input type="submit" name = 'rebot-Voice' value="Generate Audio">
+						</div>
+
+
+						<audio controls>
+							<source src={{  path  }} type="audio/mpeg">
+							Your browser does not support the audio tag.
+						  </audio>
+					
+			</form>
+				
+		
+		</div>	
+	</body>
+
+</html>
