@@ -8,7 +8,7 @@ import numpy as np
 
 # import time
 import time
-
+import os
 
 # selenium servies
 
@@ -214,7 +214,7 @@ class TextPreProcessing:
         
 
 class TTS(TextPreProcessing ,linguistic):
-    def __init__(self,text,NaiveBaseDF):
+    def __init__(self,text,NaiveBaseDF , voice_Select):
         TextPreProcessing.__init__(self,text)
         self.vowels = ['a','ɑ' ,'ā','ə','i','e','ai','əi']
         
@@ -232,6 +232,7 @@ class TTS(TextPreProcessing ,linguistic):
         
 
         self.single_form = pd.read_csv(NaiveBaseDF).set_index('consonant')
+        self.voice_Select = voice_Select
         
     def Make_Syllables(self,list_of_IPAs):
         # print(list_of_IPAs)
@@ -343,7 +344,7 @@ class TTS(TextPreProcessing ,linguistic):
         print('final_ipa_list_to_Send_API : ',final_ipa_list_to_Send_API)
         
         # calling AMazong API
-        self.polly_handler(final_ipa_list_to_Send_API)
+        self.polly_handler(final_ipa_list_to_Send_API , self.voice_Select)
         
     def Turn_into_SyllbleForm(self,partial_ipa):
         
@@ -416,8 +417,8 @@ class TTS(TextPreProcessing ,linguistic):
     
     
     def polly_handler(self,text,VoiceId='Salli'):
-        aws_access_key_id = 'addsecretkeyhere'
-        aws
+        aws_access_key_id = 'AKIATTX7A56JFU5UPRUR'
+        aws_secret_access_key = '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'
         region_name='us-west-2'
 
         API_TEXT_String  = ''
@@ -444,13 +445,13 @@ class TTS(TextPreProcessing ,linguistic):
 #         The valid values for mp3 and ogg_vorbis are "8000", "16000", "22050", and "24000". 
 #         The default value for standard voices is "22050". 
 #         The default value for neural voices is "24000".
-
+        print("------------------------------------------------------------------------------",VoiceId)
         response = polly.synthesize_speech(
             OutputFormat="mp3",
             TextType="ssml",
             Text=phoneme,
-            VoiceId='Salli',
-            SampleRate = '16000'
+            VoiceId=VoiceId,
+            SampleRate = '8000'
         )
 
         # encode polly's returned audio stream as base64 and return
@@ -599,7 +600,13 @@ class TTS(TextPreProcessing ,linguistic):
 app = Flask(__name__)
 
 
+@app.route('/About.html')
+def about():
+    return render_template('About.html')
 
+@app.route('/Documentaion.html')
+def Documentaion():
+    return render_template('Documentaion.html')
 
 
 @app.route("/",methods=['POST','GET'])
@@ -609,16 +616,22 @@ def index():
         if request.form['rebot-Voice'] == 'Generate Audio':
             RawInput = request.form['user_content']
             
-
-            Object =  TTS(RawInput , 'NaiveBase_single_form.csv')
-            Object.Testing(RawInput)
-
-            print('ye ra hay' , RawInput)
+            # os.remove('static/audio/play.mp3')
+            voice_select = request.form['voice-select']
+            print('Voice Select Name : ',voice_select)
             
-            path_ = './static/audio/play.mp3'
-            return  render_template('index.html' , path=path_)
+        Object =  TTS(RawInput , 'NaiveBase_single_form.csv' , str(voice_select))
+        Object.Testing(RawInput)
+        print('within object : ',Object.voice_Select)
+
+        
+
+        # time.sleep(3)
+        path_ = 'static/audio/play.mp3'
+        return  render_template('index.html' , path=path_)
     else:
         return render_template('index.html' , path= None)
 
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True  )
