@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<title>Text to Speech Synthesis</title>
+		<link rel="stylesheet" href="static/first.css">
+
+	</head>
+
+	<body>
+        
+<!--		<img src="1.png" id="bg" alt="">  -->     
+<!--                HEADER---NAVIGATION BAR-->
+        <div class="topnav">
+          <a class="active" href="/">Home</a>
+          <a href="/Documentaion.html">DOCUMENTATION</a>
+          <a href="/About.html">About</a>
+          <h2 class="Heading">Pashto Text to Speech Synthesis</h2>
+        </div>
+        
+<!--                SEARCH BAR       -->
+        
+    <form action="/" method="POST">
+
+        <div class="col-md-7 col-sm-7 col-xs-7">
+			<div class="wrap">
+				<div class="search">
+				<input type="text" class="searchTerm"  name="user_content" id="user_content" placeholder="Enter Text" required/>
+				</div>
+			</div>
+		</div>
+
+<!--                 BUTTON           -->
+        
+        <div class="col-md-5 col-sm-5 col-xs-5">
+            <div class="button">
+                <input type="submit" name = 'rebot-Voice'  value="Generate Audio" class="input-button">
+            </div>
+        </div>
+
+
+<!--        SOUND CONTROL             -->
+        <label for="standard-select">Voice Select</label>
+        <div class="select">
+        <select id="standard-select" name="voice-select">
+            <option value="Joanna">Joanna, Female</option>
+            <option value="Salli">Salli, Female</option>
+            <option value="Kendra">Kendra, Female</option>
+            <option value="Carla">Carla, Male</option>
+            <option value="Justin">Justin, Male</option>
+            <option value="Option length">Option that has too long of a value to fit</option>
+        </select>
+
+          	
+    </form>
+    
+    
+    <div class = 'sound-control'>
+    <audio controls>
+        <source src={{ path }}  type="audio/ogg">
+        <source src="play.mp3" type="audio/mpeg">
+        Your browser does not support the audio tag.
+      </audio>
+
+    </div>
+	</body>
+    
+
+</html>
